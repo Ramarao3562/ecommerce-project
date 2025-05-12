@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/your-username/ecommerce-backend.git'  // replace with your repo
+                git 'https://github.com/Ramarao3562/ecommerce-backend.git'  // replace with your repo
             }
         }
 
