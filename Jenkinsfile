@@ -2,46 +2,65 @@ pipeline {
     agent any
 
     environment {
-        VENV = 'venv'
+        VENV_DIR = "${WORKSPACE}/venv"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Infrastructure Code') {
             steps {
-                git 'https://github.com/Ramarao3562/ecommerce-backend.git'  // replace with your repo
+                // This is the Jenkinsfile repository — it already has credentials configured in the webhook-triggered checkout
+                echo "Infrastructure repo already cloned by Jenkins"
+            }
+        }
+
+        stage('Checkout Backend Code') {
+            steps {
+                git url: 'https://github.com/Ramarao3562/ecommerce-backend.git',
+                    branch: 'main',
+                    credentialsId: 'github-creds'
             }
         }
 
         stage('Setup Python VirtualEnv') {
             steps {
-                bat 'python -m venv %VENV%'
+                echo "Creating Python virtual environment..."
+                bat 'python -m venv venv'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                bat '''
-                    %VENV%\\Scripts\\activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest
-                '''
+                echo "Installing requirements..."
+                bat '.\\venv\\Scripts\\pip install --upgrade pip'
+                bat '.\\venv\\Scripts\\pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat '''
-                    %VENV%\\Scripts\\activate
-                    pytest
-                '''
+                echo "Running tests..."
+                bat '.\\venv\\Scripts\\pytest tests/'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploy step goes here'
+                echo "Deploying the Flask app..."
+                // Add your deployment command here
+                // For example, you might start the app: bat 'python app.py'
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up..."
+        }
+        failure {
+            echo "Build failed. Check logs above."
+        }
+        success {
+            echo "Build and deployment successful."
         }
     }
 }
